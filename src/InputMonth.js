@@ -5,7 +5,7 @@ export default class InputMonth {
   constructor(input) {
     this.original = input;
     const lang = input.getAttribute('data-lang') ? input.getAttribute('data-lang') : 'en';
-    if (Locales[lang] === undefined) throw 'Language not implemented.';
+    if(Locales[lang] === undefined) throw 'Language not implemented.';
     this.locales = Locales[lang];
     this.createStructures();
     this.bindInputEvents();
@@ -13,7 +13,7 @@ export default class InputMonth {
   }
 
   loadOriginalValue() {
-    if (this.original.value !== '') {
+    if(this.original.value !== '') {
       const sentence = this.original.value.match(/(\d{4})\-(\d{2})/);
       const year = sentence[1];
       const monthNumber = parseInt(sentence[2]) - 1;
@@ -29,7 +29,7 @@ export default class InputMonth {
     this.input.classList.add('imp--input');
     this.original.classList.forEach(c => this.input.classList.add(c));
     const iReadOnly = this.original.getAttribute('readonly');
-    if (iReadOnly)
+    if(iReadOnly)
       this.input.setAttribute('readonly', iReadOnly);
     this.input.setAttribute('type', 'text');
     this.input.setAttribute('data-month', '');
@@ -106,7 +106,7 @@ export default class InputMonth {
     controls.appendChild(prevButton);
     controls.appendChild(nextButton);
     yB.push(controls);
-    for (let i = startYear; i < startYear + 9; i++) {
+    for(let i = startYear; i < startYear + 9; i++) {
       const yearButton = document.createElement('button');
       yearButton.classList.add('imp--year--button');
       yearButton.classList.add('imp--button');
@@ -134,7 +134,7 @@ export default class InputMonth {
   onMonthClick(e) {
     this.setMonth(e.target.getAttribute('data-month-number'))
     this.input.dispatchEvent(new Event('change'));
-    if (e.explicitOriginalTarget === e.target)
+    if(e.explicitOriginalTarget === e.target)
       this.showYearViewer();
   }
 
@@ -146,7 +146,7 @@ export default class InputMonth {
 
   onInputClick(e) {
     const sentence = e.target.value.match(/(.+) (.+)/);
-    if (e.target.selectionStart <= sentence[1].length) {
+    if(e.target.selectionStart <= sentence[1].length) {
       e.target.selectionStart = 0;
       e.target.selectionEnd = sentence[1].length;
       this.monthViewer.style = 'display: block';
@@ -163,7 +163,7 @@ export default class InputMonth {
   onInputChange(e) {
     const month = e.target.getAttribute('data-month');
     const year = e.target.getAttribute('data-year');
-    if (month !== '' && year !== '')
+    if(month !== '' && year !== '')
       this.original.value = `${year}-${month.toString().padStart(2, '0')}`;
     else
       this.original.value = '';
@@ -179,7 +179,7 @@ export default class InputMonth {
 
   onInputBlur() {
     setTimeout(() => {
-      if (!this.isInContainer) {
+      if(!this.isInContainer) {
         this.monthViewer.style = 'display: none';
         this.yearViewer.style = 'display: none';
       }
@@ -188,35 +188,98 @@ export default class InputMonth {
   }
 
   onInputKeyDown(e) {
-    e.preventDefault();
     this.onInputBlur();
-    if (this.input.selectionStart === 0)
-      this.keyboardMonthSelect(e.keyCode);
-    else
-      this.keyboardYearSelect(e.keyCode);
+
+    var handled = this.input.selectionStart === 0 ?
+      this.keyboardMonthSelect(e) :
+      this.keyboardYearSelect(e);
+
+    if(handled)
+      e.preventDefault();
   }
 
-  keyboardMonthSelect(code) {
+  keyboardMonthSelect(e) {
+    var handled = false;
     const cMonth = this.input.getAttribute('data-month');
-    switch (code) {
+
+    switch(e.keyCode) {
+      case 0x30: // 0
+        if(cMonth === '1') {
+          //  Switch to month 10
+          this.setMonth(10);
+          this.selectInputMonth();
+          handled = true;
+        }
+
+        break;
+      case 0x31: // 1
+        if(cMonth === '1') {
+          //  Switch to month 11
+          this.setMonth(11);
+        }
+        else {
+          this.setMonth(1);
+        }
+
+        this.selectInputMonth();
+        handled = true;
+
+        break;
+      case 0x32: // 2
+        if(cMonth === '1') {
+          //  Switch to month 12
+          this.setMonth(12);
+        }
+        else {
+          this.setMonth(2);
+        }
+
+        this.selectInputMonth();
+        handled = true;
+
+        break;
+      case 0x33: // 3
+      case 0x34: // 4
+      case 0x35: // 5
+      case 0x36: // 6
+      case 0x37: // 7
+      case 0x38: // 8
+      case 0x39: // 9
+        this.setMonth(e.keyCode - 0x30);
+        this.selectInputMonth();
+        handled = true;
+        break;
+
       case 38: // up
-        if (cMonth === '' || cMonth === '12')
+        if(cMonth === '' || cMonth === '12')
           this.monthViewer.childNodes[0].click();
         else
           this.monthViewer.childNodes[cMonth].click();
         this.selectInputMonth();
+        handled = true;
         break;
       case 39: // right
         this.selectInputYear();
+        handled = true;
+        break;
+      case 9: //  tab
+        if(!e.shiftKey) {
+          this.selectInputYear();
+          handled = true;
+        }
+
         break;
       case 40: // down
-        if (cMonth === '' || cMonth === '1')
+        if(cMonth === '' || cMonth === '1')
           this.monthViewer.childNodes[11].click();
         else
           this.monthViewer.childNodes[parseInt(cMonth) - 2].click();
         this.selectInputMonth();
+        handled = true;
         break;
     }
+
+    return handled;
   }
 
   selectInputMonth() {
@@ -230,15 +293,25 @@ export default class InputMonth {
     this.input.selectionEnd = this.input.value.length;
   }
 
-  keyboardYearSelect(code) {
+  keyboardYearSelect(e) {
+    var handled = false;
     const sentence = this.input.value.match(/(.+) (.+)/);
     const cYear = this.input.getAttribute('data-year');
-    switch (code) {
+
+    switch(e.keyCode) {
       case 37: // left
         this.selectInputMonth();
+        handled = true;
+        break;
+      case 9: //  tab
+        if(e.shiftKey) {
+          this.selectInputMonth();
+          handled = true;
+        }
+
         break;
       case 38: // up
-        if (cYear === '') {
+        if(cYear === '') {
           this.input.value = `${sentence[1]} ${new Date().getFullYear()}`;
           this.input.setAttribute('data-year', new Date().getFullYear());
         }
@@ -246,10 +319,12 @@ export default class InputMonth {
           this.input.value = `${sentence[1]} ${parseInt(cYear) + 1}`;
           this.input.setAttribute('data-year', parseInt(cYear) + 1);
         }
+
         this.selectInputYear();
+        handled = true;
         break;
       case 40: // down
-        if (cYear === '') {
+        if(cYear === '') {
           this.input.value = `${sentence[1]} ${new Date().getFullYear() - 1}`;
           this.input.setAttribute('data-year', new Date().getFullYear() - 1);
         }
@@ -258,8 +333,11 @@ export default class InputMonth {
           this.input.setAttribute('data-year', parseInt(cYear) - 1);
         }
         this.selectInputYear();
+        handled = true;
         break;
     }
+
+    return handled;
   }
 
   showYearViewer() {

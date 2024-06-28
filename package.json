@@ -16,9 +16,9 @@
     "url": "https://github.com/logicamenteinfo/input-month-polyfill.git"
   },
   "scripts": {
-    "build": "cross-env NODE_ENV=production webpack",
-    "build-dev": "cross-env NODE_ENV=development webpack",
-    "start": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --open",
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && cross-env NODE_ENV=production webpack",
+    "build-dev": "set NODE_OPTIONS=--openssl-legacy-provider && cross-env NODE_ENV=development webpack",
+    "start": "set NODE_OPTIONS=--openssl-legacy-provider && cross-env NODE_ENV=development webpack-dev-server --inline --hot --open",
     "test": "echo No tests required"
   },
   "dependencies": {
